@@ -21,6 +21,26 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
+// Define User model
+const User = mongoose.model('User', {
+  username: String,
+  password: String,
+});
+
+// Configure middleware
+app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
+app.use(
+  session({
+    secret: 'your_secret_key',
+    resave: false,
+    saveUninitialized: true,
+    store: new MongoStore({  mongoUrl: 'mongodb://127.0.0.1:27017/login-system' }),
+  })
+);
+
+// Define routes
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
@@ -39,9 +59,9 @@ app.post(
 
     const { username, password } = req.body;
 
-    // Check if the user already exists
     const existingUser = await User.findOne({ username });
     if (existingUser) {
+      console.log('User already exists:', existingUser.username);
       return res.status(400).json({ message: 'Username already in use. Please choose another one.' });
     }
 
@@ -95,3 +115,4 @@ app.get('/dashboard', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
